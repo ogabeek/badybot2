@@ -101,7 +101,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     })
 
     # Random interaction
-    if random.randint(1, 10) == 1:
+    if random.randint(1, 4) == 1:
         try:
             prompt = f"Write a humorous comment or joke about the following message:\n\n{message.text}"
             response = openai.chat.completions.create(
@@ -358,7 +358,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Enjoy!")
+    await query.edit_message_text("Text to @ogabeeek to know how this bot works! ")
 
 # Function to handle bot being added to a group
 async def chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -386,13 +386,13 @@ async def chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE)
 # Function to send message after a week
 async def send_week_message(context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.job.chat_id
-    text = "Thank you for using this bot, it's totally free for you, but it consumes resources. If you want to support it, please visit this link: [Support Link]"
+    text = "Thank you for using this bot, it's totally free for you, but it consumes resources. If you want to support it, please visit this link: [https://t.ly/m4-av]"
     await context.bot.send_message(chat_id=chat_id, text=text)
 
 # Function to send message after a month
 async def send_month_message(context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.job.chat_id
-    text = "It's been a month! Thank you for using this bot. If you'd like to support its development, please visit this link: [Support Link]"
+    text = "It's been a month! Thank you for using this bot. If you'd like to support its development, please visit this link: [https://t.ly/m4-av]"
     await context.bot.send_message(chat_id=chat_id, text=text)
 
 
