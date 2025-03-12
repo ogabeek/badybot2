@@ -2,7 +2,6 @@ import os
 import logging
 from datetime import datetime, timedelta, timezone
 import random
-import json
 from dotenv import load_dotenv
 
 from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated 
@@ -41,10 +40,7 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
     raise ValueError("The Telegram bot token is not set. Please set the BOT_TOKEN environment variable.")
 
-# Set up MongoDB connection
-URI = os.getenv('MONGODB_URI')
-if not URI:
-    raise ValueError("The MongoDB URI is not set. Please set the MONGODB_URI environment variable.")
+
 
 
 # Create a new client and connect to the server
@@ -458,42 +454,4 @@ if __name__ == '__main__':
     
 
 
-# Import history from JSON file
-# def import_history_from_json(json_file_path):
-#     with open(json_file_path, 'r', encoding='utf-8') as f:
-#         data = json.load(f)
-
-#     messages = data.get('messages', [])
-#     for message in messages:
-#         if 'text' not in message or message['type'] != 'message':
-#             continue
-
-#         text_content = message['text']
-#         # Handle cases where 'text' can be a list
-#         if isinstance(text_content, list):
-#             text_content = ''.join(
-#                 part['text'] if isinstance(part, dict) else part
-#                 for part in text_content
-#             )
-
-#         # Parse timestamp
-#         date_str = message['date']
-#         timestamp = int(datetime.datetime.fromisoformat(date_str).timestamp())
-
-#         # Create message document
-#         msg_doc = {
-#             'message_id': message['id'],
-#             'chat_id': message.get('chat_id', None),
-#             'user_id': message.get('from_id', None),
-#             'username': message.get('from', None),
-#             'text': text_content,
-#             'timestamp': timestamp,
-#         }
-
-#         # Insert or update the message in the database
-#         messages_collection.update_one(
-#             {'message_id': msg_doc['message_id']},
-#             {'$set': msg_doc},
-#             upsert=True
-#         )
     

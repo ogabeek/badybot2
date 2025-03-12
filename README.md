@@ -12,7 +12,7 @@
   *Suggestion:* All functions should collect and respond according to each group's unique ID.
 - [ ] 🙋 **DataBase:**  
     Integrade database to mongoDB online
-- [ ] 🙋‍♀️ **Function Separation:**  
+- [ ] 🙋 **Function Separation:**  
   "Remember," stats, summary, and topic statements should be separated.
 - [ ] 🙋‍♀️ **Engagement Function:**  
   Create a function that occasionally engages the chat by adding comments, gifts, or other media.
@@ -32,27 +32,30 @@
 [ ] - not assigned yet
 
 
+
+
+
 --- 
-
-This project was created within a Python virtual environment (venv). Below is the recommended project structure:
-
-<i> Download all requrements: 
-```pip install -r requirements.txt```</i>
-
 
 # Project Structure
 
 ```text
+
 project_folder/
 ├── venv/            # Virtual environment
 ├── src/             # Source code 
-│   └── main.py      # Main script
+│   ├── main.py      # Main script
+│   ├── ai_functions.py
+│   ├── db_functions.py
+│   └── command_hanlers.py
 ├── tests/           # Tests (unit tests)
 ├── README.md        # Project overview and instructions
 ├── requirements.txt # List of dependencies
 └── .gitignore       # Git ignore rules
 
 ```
+<i> Download all requrements: 
 
+```pip install -r requirements.txt```</i>
 <i> I am commiting gitignore file to show files that I've used and ignored </i>
 
