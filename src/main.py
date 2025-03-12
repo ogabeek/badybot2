@@ -41,6 +41,9 @@ if not BOT_TOKEN:
     raise ValueError("The Telegram bot token is not set. Please set the BOT_TOKEN environment variable.")
 
 
+URI = os.getenv('URI')
+if not URI:
+    raise ValueError("The Database token is not set. Please set the URI environment variable.")
 
 
 # Create a new client and connect to the server
@@ -109,7 +112,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     })
 
     # Random interaction
-    if random.randint(1, 4) == 1:
+    if random.randint(1, 10) == 1:
         try:
             prompt = f"Write a humorous comment or joke about the following message:\n\n{message.text}"
             response = openai.chat.completions.create(

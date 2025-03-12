@@ -1,4 +1,8 @@
 
+
+find the bot [this link](https://bady00bot.t.me)
+
+
 # Project Agenda
 
 - [ ] 🙋‍♀️ **Add full project description in README.**
