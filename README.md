@@ -10,6 +10,8 @@
 - [ ] 🙋 **Message Separation Issue:**  
   The bot currently remembers messages from other chats. Each group should be independent.  
   *Suggestion:* All functions should collect and respond according to each group's unique ID.
+- [ ] 🙋 **DataBase:**  
+    Integrade database to mongoDB online
 - [ ] 🙋‍♀️ **Function Separation:**  
   "Remember," stats, summary, and topic statements should be separated.
 - [ ] 🙋‍♀️ **Engagement Function:**  
@@ -27,7 +29,7 @@
 
 🙋 - this is Ogabek 
 
-- [ ] - not assigned yet
+[ ] - not assigned yet
 
 
 --- 

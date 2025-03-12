@@ -19,6 +19,8 @@ from telegram.ext import (
 import openai
 
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
+
 
 # ============================
 # 1. Setup and Configuration
@@ -39,8 +41,18 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
     raise ValueError("The Telegram bot token is not set. Please set the BOT_TOKEN environment variable.")
 
+# Set up MongoDB connection
+URI = os.getenv('MONGODB_URI')
+if not URI:
+    raise ValueError("The MongoDB URI is not set. Please set the MONGODB_URI environment variable.")
+
+
+# Create a new client and connect to the server
+client = MongoClient(URI, server_api=ServerApi('1'))
+
+
 # Connect to MongoDB
-client = MongoClient('mongodb://localhost:27017/telegram_bot_bd')
+# client = MongoClient('mongodb://localhost:27017/telegram_bot_bd')
 db = client['telegram_bot_db']
 messages_collection = db['messages']
 memory_collection = db['memory']
@@ -105,7 +117,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             prompt = f"Write a humorous comment or joke about the following message:\n\n{message.text}"
             response = openai.chat.completions.create(
-                model='gpt-3.5-turbo',
+                model='gpt-4o-mini',
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=50,
                 temperature=0.9,
@@ -156,7 +168,7 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text}"
         response = openai.chat.completions.create(
-            model='gpt-3.5-turbo',
+            model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -221,7 +233,7 @@ async def daily_summary_command(update: Update, context: ContextTypes.DEFAULT_TY
     try:
         prompt = f"Provide a bullet point summary of the following messages from today:\n\n{messages_text}"
         response = openai.chat.completions.create(
-            model='gpt-3.5-turbo',
+            model='gpt-4o-mini',
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -277,7 +289,7 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = openai.chat.completions.create(
-            model='gpt-3.5-turbo',
+            model='gpt-4o-mini',
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -320,7 +332,7 @@ def generate_response(prompt, context):
     ]
     try:
         response = openai.chat.completions.create(
-            model='gpt-3.5-turbo',
+            model='gpt-4o-mini',
             messages=messages,
             max_tokens=150,
             temperature=0.7,
