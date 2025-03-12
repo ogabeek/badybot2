@@ -444,12 +444,6 @@ if __name__ == '__main__':
     main()
     
     
-# in a week and then in a month since adding bot to the group, the bot has to trigger message "thank you for using this bot, it's totally free for you, but it concumes resourses. and if you want to support it for a while this link - > 
-# stats should be awailable not only by @user_name but also with the name in chat. 
-# there is a problem that it remembers messages from other chats. it shouldn't be that. For each group whether the bot connected it must be independed from others. I think the solution here is that all the functions must collect and respond regarding the groups id.
-# "remember", stats, summary, topic statements are also must be separated by
-
-
 
 
 # Import history from JSON file
