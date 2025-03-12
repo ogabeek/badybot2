@@ -5,11 +5,16 @@
 [ ] stats should be awailable not only by @user_name but also with the name in chat. 
 [ 🙋 ] there is a problem that it remembers messages from other chats. it shouldn't be that. For each group whether the bot connected it must be independed from others. I think the solution here is that all the functions must collect and respond regarding the groups id.
 [ ] "remember", stats, summary, topic statements are also must be separated by
-[ ] make a function taht engages to the chat sometimes adding his comments, gifts or other media during 
+[ 🙋‍♀️ ] make a function taht engages to the chat sometimes adding his comments, gifts or other media during 
 [ ] maybe add documentation to the functions
-[ ] your own additional functions
+[ 🙋‍♀️ ] your own additional functions
 
 
+🙋‍♀️ - this is Nina
+🙋 - this is Ogabek 
+
+
+<b> Team: </b> Nina (Lead), Ogabek 
 
 This project was created within a Python virtual environment (venv). Below is the recommended project structure:
 
