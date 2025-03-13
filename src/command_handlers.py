@@ -87,20 +87,20 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if new_count % N == 0:
         await send_random_gif_or_sticker(chat.id, context)
 
-
-
+# Randomly picks what to send
 async def send_random_gif_or_sticker(chat_id, context):
     if random.choice([True, False]):  # 50% chance GIF or sticker
         await send_random_gif(chat_id, context)
     else:
         await send_random_sticker(chat_id, context)
 
-
+# Sends a random GIF based on the 'funny' query
 async def send_random_gif(chat_id, context):
     """Use Telegram's inline search to send a random GIF"""
-    await context.bot.send_message(chat_id, "@gif funny")  # Sends a random GIF based on the 'funny' query
+    await context.bot.send_message(chat_id, "@gif funny")  
 
 
+# Sends a random sticker from the given packs
 async def send_random_sticker(chat_id, context):
     """Fetches a random sticker from any public sticker pack"""
     sticker_packs = [   # Replace with actual public sticker pack names
@@ -321,7 +321,4 @@ async def topic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     topics = ai_functions_lib.generate_response(prompt, context_text)
 
     await update.message.reply_text(f"Main topics:\n{topics}")
-
-
-
 

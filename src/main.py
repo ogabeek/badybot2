@@ -58,7 +58,7 @@ def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     
     # Command handlers
-    application.add_handler(CommandHandler('profile', profile_command))
+    application.add_handler(CommandHandler('profile', profile_command))  
     application.add_handler(CommandHandler('stats', statistics_command))
     application.add_handler(CommandHandler('summary', daily_summary_command))  # Alias for /daily_summary
     application.add_handler(CommandHandler('ask', ask_command))

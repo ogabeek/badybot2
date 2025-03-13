@@ -12,8 +12,6 @@ import pandas as pd
 from telegram.ext import CallbackContext
 
 
-
-
 # ============================
 # 1. Setup and Configuration
 # ============================
@@ -61,6 +59,7 @@ def extract_status_change(chat_member_update: ChatMemberUpdated):
     return was_member, is_member
 
 
+# Sends a pie chart of group members' activity
 async def send_activity_chart(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
 
