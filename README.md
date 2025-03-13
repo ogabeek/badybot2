@@ -4,6 +4,8 @@ You can find the bot [on this link.](https://bady00bot.t.me)
 
 **BadyBot2** is a feature-rich Telegram bot built using Python and the `python-telegram-bot` library. It tracks user activity, sends random responses (jokes and GIFs), generates activity reports in the form of pie charts, and interacts with users in various fun and useful ways.
 
+
+
 ## Features
 
 - **Track User Activity**: The bot stores messages sent by users and tracks the activity in a MongoDB database.
@@ -98,7 +100,8 @@ badybot2/
   "Remember," stats, summary, and topic statements should be separated.
 - ✅ 🙋‍♀️ **Engagement Function:**  
   Create a function that occasionally engages the chat by adding comments, gifts, or other media.
-- ✅ 🙋‍♀️ **Documentation:**  
+- ✅ 🙋‍♀️ **Documentation:**   
+
   Add documentation to the functions.
 - [ ] **Additional Custom Functions:**  
   Implement your own additional functions as needed.
