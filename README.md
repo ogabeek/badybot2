@@ -1,6 +1,6 @@
 # BadyBot2 - Telegram Bot
 
-Find the bot [this link](https://bady00bot.t.me)
+You can find the bot [on this link.](https://bady00bot.t.me)
 
 **BadyBot2** is a feature-rich Telegram bot built using Python and the `python-telegram-bot` library. It tracks user activity, sends random responses (jokes and GIFs), generates activity reports in the form of pie charts, and interacts with users in various fun and useful ways.
 
@@ -57,7 +57,7 @@ Find the bot [this link](https://bady00bot.t.me)
 - The bot stores messages and activity data in MongoDB. You can configure MongoDB connection settings in src/db_functions.py.
 - Sticker and GIF Handling: The bot can send random stickers and GIFs via Telegram's inline search (@gif funny, @sticker).
 
-## File structure
+### File structure
 ```
 badybot2/
 ├── src/
@@ -75,8 +75,7 @@ badybot2/
 
 1. Make sure all the environment variables are set (either in .env or via your terminal).
 2. Run the bot using the following command: python src/main.py
-
-Your bot will start running and will respond to commands in the Telegram chat.
+3. Your bot will start running and will respond to commands in the Telegram chat.
 
 
 
