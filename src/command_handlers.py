@@ -5,13 +5,10 @@ from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup, ChatMe
 from telegram.ext import ContextTypes
 import openai
 from db_functions import (
-    db,
     messages_collection,
     memory_collection,
-    chat_info_collection,
     logger
 )
-
 import ai_functions_lib
 
 # ============================
@@ -37,17 +34,6 @@ def update_memory(chat_id, new_text):
         {'$set': {'memory': limited_memory}},
         upsert=True
     )
-
-
-# Helper function to extract status change
-def extract_status_change(chat_member_update: ChatMemberUpdated):
-    old_status = chat_member_update.old_chat_member.status
-    new_status = chat_member_update.new_chat_member.status
-    if old_status == new_status:
-        return None
-    was_member = old_status in ['member', 'administrator', 'creator']
-    is_member = new_status in ['member', 'administrator', 'creator']
-    return was_member, is_member
 
 
 # Function to store messages and handle random interactions

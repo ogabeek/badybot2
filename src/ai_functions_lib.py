@@ -2,8 +2,7 @@ from datetime import datetime, timedelta, timezone
 from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 import openai
-from db_functions import chat_info_collection, logger
-from command_handlers import extract_status_change
+from db_functions import chat_info_collection, logger, extract_status_change
 
 
 # Generate a response using OpenAI API

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import openai
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-
+from telegram import ChatMemberUpdated 
 
 # ============================
 # 1. Setup and Configuration
@@ -42,3 +42,12 @@ messages_collection = db['messages']
 memory_collection = db['memory']
 chat_info_collection = db['chat_info']
 
+# Helper function to extract status change
+def extract_status_change(chat_member_update: ChatMemberUpdated):
+    old_status = chat_member_update.old_chat_member.status
+    new_status = chat_member_update.new_chat_member.status
+    if old_status == new_status:
+        return None
+    was_member = old_status in ['member', 'administrator', 'creator']
+    is_member = new_status in ['member', 'administrator', 'creator']
+    return was_member, is_member
