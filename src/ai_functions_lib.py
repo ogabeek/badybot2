@@ -1,39 +1,13 @@
-import os
-import logging
 from datetime import datetime, timedelta, timezone
-import random
-from dotenv import load_dotenv
-
-from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated 
-from telegram.ext import (
-    ApplicationBuilder, 
-    CommandHandler, 
-    MessageHandler, 
-    filters, 
-    ContextTypes,
-    CallbackQueryHandler,
-    ChatMemberHandler
-)
-
+from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
 import openai
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
-
-from db_functions import (
-    db,
-    messages_collection,
-    memory_collection,
-    chat_info_collection,
-    logger
-)
-
-from command_handlers import (
-    extract_status_change
-)
+from db_functions import chat_info_collection, logger
+from command_handlers import extract_status_change
 
 
 # Generate a response using OpenAI API
-def generate_response(prompt, context):
+def generate_responses(prompt, context):
     # Configure the AI with a default prompt for informal English
     system_message = "You are an AI assistant that communicates in informal English language."
     messages = [

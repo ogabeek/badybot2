@@ -1,25 +1,9 @@
-import os
-import logging
 from datetime import datetime, timedelta, timezone
 import random
 from dotenv import load_dotenv
-
 from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated 
-from telegram.ext import (
-    ApplicationBuilder, 
-    CommandHandler, 
-    MessageHandler, 
-    filters, 
-    ContextTypes,
-    CallbackQueryHandler,
-    ChatMemberHandler
-)
-
+from telegram.ext import ContextTypes
 import openai
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
-
-
 from db_functions import (
     db,
     messages_collection,
@@ -28,9 +12,7 @@ from db_functions import (
     logger
 )
 
-from ai_functions import (
-    generate_response
-)
+import ai_functions_lib
 
 # ============================
 # 2. Helper Functions
@@ -299,7 +281,7 @@ async def topic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Generate topics using AI
     prompt = "Identify the main topics discussed in the following conversation."
-    topics = generate_response(prompt, context_text)
+    topics = ai_functions_lib.generate_response(prompt, context_text)
 
     await update.message.reply_text(f"Main topics:\n{topics}")
 
