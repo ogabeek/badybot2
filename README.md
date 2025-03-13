@@ -16,10 +16,12 @@ find the bot [this link](https://bady00bot.t.me)
   *Suggestion:* All functions should collect and respond according to each group's unique ID.
 - [ ] 🙋 **DataBase:**  
     Integrade database to mongoDB online
-- [ ] 🙋‍♀️ **Function Separation:**  
+- ✅ 🙋‍♀️ **Function Separation:**  
   "Remember," stats, summary, and topic statements should be separated.
 - [ ] 🙋‍♀️ **Engagement Function:**  
   Create a function that occasionally engages the chat by adding comments, gifts, or other media.
+- [ ] 🙋‍♀️ **Piechart Function:**  
+  Create a function that shows the data as a piechart
 - [ ]    **Documentation:**  
   Add documentation to the functions.
 - [ ] 🙋‍♀️ **Additional Custom Functions:**  
