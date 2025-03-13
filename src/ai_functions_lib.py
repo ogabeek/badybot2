@@ -76,6 +76,10 @@ async def send_month_message(context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=chat_id, text=text)
 
 
+
+
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("this bot on service", callback_data='enjoy')]

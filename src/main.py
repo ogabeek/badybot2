@@ -22,7 +22,7 @@ from command_handlers import (
     topic_command,
     message_handler
 )
-from db_functions import BOT_TOKEN
+from db_functions import BOT_TOKEN, send_activity_chart
 
 
 
@@ -66,6 +66,7 @@ def main():
     application.add_handler(CommandHandler('help', help_command))
     application.add_handler(CommandHandler('topic', topic_command))
     application.add_handler(CommandHandler('start', start_command))  # Add /start command
+    application.add_handler(CommandHandler("activity", send_activity_chart))  # sends pie chart
 
     # Callback query handler
     application.add_handler(CallbackQueryHandler(button_callback))

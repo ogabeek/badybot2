@@ -36,6 +36,8 @@ def update_memory(chat_id, new_text):
     )
 
 
+N = 5  # number of messages before it sends a gif/sticker
+
 # Function to store messages and handle random interactions
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -71,6 +73,54 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except openai.OpenAIError as e:
             logger.error(f"OpenAI API error: {e}")
 
+    # Track message count
+    counter = memory_collection.find_one({"chat_id": chat.id})
+    
+    if counter:
+        new_count = counter["count"] + 1
+        memory_collection.update_one({"chat_id": chat.id}, {"$set": {"count": new_count}})
+    else:
+        new_count = 1
+        memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
+
+    # If N messages have been sent, reset counter and send a GIF/sticker
+    if new_count % N == 0:
+        await send_random_gif_or_sticker(chat.id, context)
+
+
+
+async def send_random_gif_or_sticker(chat_id, context):
+    if random.choice([True, False]):  # 50% chance GIF or sticker
+        await send_random_gif(chat_id, context)
+    else:
+        await send_random_sticker(chat_id, context)
+
+
+async def send_random_gif(chat_id, context):
+    """Use Telegram's inline search to send a random GIF"""
+    await context.bot.send_message(chat_id, "@gif funny")  # Sends a random GIF based on the 'funny' query
+
+
+async def send_random_sticker(chat_id, context):
+    """Fetches a random sticker from any public sticker pack"""
+    sticker_packs = [   # Replace with actual public sticker pack names
+        "Pepe the Frog",
+        "SpongeBob",
+        "Caturday",
+        "BTS Stickers",
+        "Ghibli Stickers",
+        "Reaction Stickers",
+        "Anime Stickers",
+        "Meme Stickers"
+    ]
+
+    sticker_pack_name = random.choice(sticker_packs)
+    stickers = await context.bot.get_sticker_set(sticker_pack_name)
+
+    if stickers and stickers.stickers:
+        sticker_id = random.choice(stickers.stickers).file_id
+        await context.bot.send_sticker(chat_id, sticker_id)
+
 
 # Command handler for /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -83,6 +133,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /topic - Get main topics from recent discussions
 /profile [@username or Name] - Get what the group knows about the user 
 /remember [[text]] - Add a short memory to further AI prompts(limited).
+/activity - Shows the percentage of messages sent by each person
 """
     # Create a button with coffee emoji
     button = InlineKeyboardButton("☕ - on service", callback_data='coffee')
