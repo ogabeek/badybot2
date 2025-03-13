@@ -20,6 +20,17 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
 
+from db_functions import (
+    db,
+    messages_collection,
+    memory_collection,
+    chat_info_collection,
+    logger
+)
+
+from ai_functions import (
+    generate_response
+)
 
 # ============================
 # 2. Helper Functions
@@ -91,6 +102,25 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text(reply)
         except openai.OpenAIError as e:
             logger.error(f"OpenAI API error: {e}")
+
+
+# Command handler for /help
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = """
+📋 *Commands:*
+/help - Show this help message
+/stats - Check out chat activity statistics
+/ask [question] - Ask anything to AI.
+/summary - Today's bullet point summary
+/topic - Get main topics from recent discussions
+/profile [@username or Name] - Get what the group knows about the user 
+/remember [[text]] - Add a short memory to further AI prompts(limited).
+"""
+    # Create a button with coffee emoji
+    button = InlineKeyboardButton("☕ - on service", callback_data='coffee')
+    keyboard = InlineKeyboardMarkup([[button]])
+
+    await update.message.reply_text(help_text, reply_markup=keyboard, parse_mode='Markdown')
 
 
 # Function for /profile command
