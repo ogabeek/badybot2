@@ -1,3 +1,6 @@
+import os
+import logging
+from dotenv import load_dotenv
 from telegram.ext import (
     ApplicationBuilder, 
     CommandHandler, 
@@ -6,23 +9,45 @@ from telegram.ext import (
     CallbackQueryHandler,
     ChatMemberHandler
 )
+
+## Import AI-specific handlers.
 from ai_functions_lib import (
+    ask_command,
+    remember_command,
+    profile_command,
+    topic_command,
+    daily_summary_command,
+)
+
+# Import non-AI command handlers.
+from command_handlers import (
     start_command,
     button_callback,
     chat_member_update,
-    unknown_command   
-)
-from command_handlers import (
-    profile_command,
+    unknown_command,
     statistics_command,
-    daily_summary_command,
-    ask_command,
-    remember_command,
     help_command,
-    topic_command,
     message_handler
+    #send in a month message
+    #send in a week message
 )
-from db_functions import BOT_TOKEN, send_activity_chart
+
+from stats_handlers import send_activity_chart
+from utils import extract_status_change  # if needed elsewhere
+
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+if not BOT_TOKEN:
+    raise ValueError("The Telegram bot token is not set. Please set the BOT_TOKEN environment variable.")
+
+
+
 
 
 def main():

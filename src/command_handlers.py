@@ -1,30 +1,92 @@
-from datetime import datetime, timedelta, timezone
+import os
 import random
-from dotenv import load_dotenv
-from telegram import Update,  InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated 
+import io
+from datetime import datetime, timedelta, timezone
+from db_functions import logger
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated
 from telegram.ext import ContextTypes
-import openai
+from dotenv import load_dotenv
+
+# Load environment variables (if not already loaded in main)
+load_dotenv()
+
+# Import database helpers and logger from db_functions.py
 from db_functions import (
     messages_collection,
     memory_collection,
+    chat_info_collection,
+    get_statistics_text,
     logger
 )
-import ai_functions_lib
 
-# ============================
-# 2. Helper Functions
-# ============================
+# Number of messages before triggering a random GIF/sticker response.
+N = 5
 
-# Function for memory management
-def get_memory(chat_id):
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle the /start command.
+    """
+    keyboard = [[InlineKeyboardButton("this bot on service", callback_data="enjoy")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Welcome! Choose an option:", reply_markup=reply_markup)
+
+
+
+async def send_activity_chart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Generate and send a pie chart showing the percentage of messages sent by each user.
+    """
+    chat_id = update.effective_chat.id
+
+    # Aggregate message counts by username.
+    pipeline = [
+        {"$group": {"_id": "$username", "message_count": {"$sum": 1}}}
+    ]
+    message_counts = list(messages_collection.aggregate(pipeline))
+
+    if not message_counts:
+        await context.bot.send_message(chat_id, "No activity data available.")
+        return
+
+    # Convert the aggregated data into a DataFrame.
+    df = pd.DataFrame(message_counts)
+    df.rename(columns={"_id": "username", "message_count": "Total"}, inplace=True)
+
+    # Plot a pie chart.
+    plt.figure(figsize=(8, 6))
+    plt.pie(
+        df["Total"],
+        labels=df["username"],
+        autopct='%1.1f%%',
+        startangle=90,
+        colors=plt.cm.Paired.colors
+    )
+    plt.title("Percentage of Messages Sent by Each User")
+
+    # Save the plot to an in-memory buffer.
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    plt.close()
+
+    # Send the chart as a photo to the chat.
+    await context.bot.send_photo(chat_id, photo=buffer)
+    buffer.close()
+
+def get_memory(chat_id: int) -> str:
+    """
+    Retrieve stored memory text for a chat.
+    """
     memory_doc = memory_collection.find_one({'chat_id': chat_id})
-    if memory_doc:
-        return memory_doc.get('memory', '')
-    else:
-        return ''
+    return memory_doc.get('memory', '') if memory_doc else ''
 
-
-def update_memory(chat_id, new_text):
+def update_memory(chat_id: int, new_text: str) -> None:
+    """
+    Update the memory for a chat by appending new text, keeping only the last 50 words.
+    """
     current_memory = get_memory(chat_id)
     combined_text = f"{current_memory} {new_text}"
     words = combined_text.split()
@@ -35,19 +97,19 @@ def update_memory(chat_id, new_text):
         upsert=True
     )
 
-
-N = 5  # number of messages before it sends a gif/sticker
-
-# Function to store messages and handle random interactions
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Store incoming messages and update a simple message counter.
+    Every N messages, trigger sending a random GIF or sticker.
+    """
     message = update.message
     if not message:
         return
-    
+
     user = message.from_user
     chat = message.chat
 
-    # Store the message in the database
+    # Store the message in the database.
     messages_collection.insert_one({
         'message_id': message.message_id,
         'chat_id': chat.id,
@@ -58,52 +120,40 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'timestamp': message.date
     })
 
-    # Random interaction
-    if random.randint(1, 10) == 1:
-        try:
-            prompt = f"Write a humorous comment or joke about the following message:\n\n{message.text}"
-            response = openai.chat.completions.create(
-                model='gpt-4o-mini',
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=50,
-                temperature=0.9,
-            )
-            reply = response.choices[0].message.content.strip()
-            await message.reply_text(reply)
-        except openai.OpenAIError as e:
-            logger.error(f"OpenAI API error: {e}")
-
-    # Track message count
+    # Update a simple message counter in the memory collection.
     counter = memory_collection.find_one({"chat_id": chat.id})
-    
-    if counter:
+    if counter and "count" in counter:
         new_count = counter["count"] + 1
         memory_collection.update_one({"chat_id": chat.id}, {"$set": {"count": new_count}})
     else:
         new_count = 1
         memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
 
-    # If N messages have been sent, reset counter and send a GIF/sticker
+    # If count is a multiple of N, send a random GIF or sticker.
     if new_count % N == 0:
         await send_random_gif_or_sticker(chat.id, context)
 
-# Randomly picks what to send
-async def send_random_gif_or_sticker(chat_id, context):
-    if random.choice([True, False]):  # 50% chance GIF or sticker
+async def send_random_gif_or_sticker(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Randomly choose to send either a GIF or a sticker.
+    """
+    if random.choice([True, False]):
         await send_random_gif(chat_id, context)
     else:
         await send_random_sticker(chat_id, context)
 
-# Sends a random GIF based on the 'funny' query
-async def send_random_gif(chat_id, context):
-    """Use Telegram's inline search to send a random GIF"""
-    await context.bot.send_message(chat_id, "@gif funny")  
+async def send_random_gif(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Send a random GIF (placeholder implementation).
+    """
+    # This is a placeholder—ideally, use an API or inline query to fetch a GIF.
+    await context.bot.send_message(chat_id, "@gif funny")
 
-
-# Sends a random sticker from the given packs
-async def send_random_sticker(chat_id, context):
-    """Fetches a random sticker from any public sticker pack"""
-    sticker_packs = [   # Replace with actual public sticker pack names
+async def send_random_sticker(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Send a random sticker from a predefined list of sticker packs.
+    """
+    sticker_packs = [
         "Pepe the Frog",
         "SpongeBob",
         "Caturday",
@@ -113,212 +163,96 @@ async def send_random_sticker(chat_id, context):
         "Anime Stickers",
         "Meme Stickers"
     ]
-
     sticker_pack_name = random.choice(sticker_packs)
     stickers = await context.bot.get_sticker_set(sticker_pack_name)
-
     if stickers and stickers.stickers:
         sticker_id = random.choice(stickers.stickers).file_id
         await context.bot.send_sticker(chat_id, sticker_id)
 
-
-# Command handler for /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Display a help message listing available non-AI commands.
+    """
     help_text = """
-📋 *Commands:*
-/help - Show this help message
-/stats - Check out chat activity statistics
-/ask [question] - Ask anything to AI.
-/summary - Today's bullet point summary
-/topic - Get main topics from recent discussions
-/profile [@username or Name] - Get what the group knows about the user 
-/remember [[text]] - Add a short memory to further AI prompts(limited).
-/activity - Shows the percentage of messages sent by each person
-"""
-    # Create a button with coffee emoji
+    📋 *Commands:*
+    /help - Show this help message
+    /stats - Check out chat activity statistics
+    /ask [question] - Ask anything to AI.
+    /summary - Today's bullet point summary
+    /topic - Get main topics from recent discussions
+    /profile [@username or Name] - Get what the group knows about the user 
+    /remember [[text]] - Add a short memory to further AI prompts(limited).
+    /activity - Shows the percentage of messages sent by each person
+    """
+
     button = InlineKeyboardButton("☕ - on service", callback_data='coffee')
     keyboard = InlineKeyboardMarkup([[button]])
-
     await update.message.reply_text(help_text, reply_markup=keyboard, parse_mode='Markdown')
 
-
-# Function for /profile command
-async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 1:
-        await update.message.reply_text("Please provide a username. Usage: /profile @username")
-        return
-
-    name = context.args[0]
-    chat_id = update.effective_chat.id
-
-    if name.startswith('@'):
-        # Search by username
-        username = name[1:]
-        display_name = f"@{username}"
-        messages = messages_collection.find({
-            '$or': [
-                {'username': username},
-                {'text': {'$regex': f'@{username}'}}
-            ],
-            'chat_id': chat_id
-        }).sort('timestamp', -1).limit(100)
-    else:
-        # Search by full_name
-        username = name 
-        display_name = name
-        messages = messages_collection.find({
-            '$or': [
-                {'full_name': {'$regex': name, '$options': 'i'}},
-                {'text': {'$regex': name, '$options': 'i'}}
-            ],
-            'chat_id': chat_id
-        }).sort('timestamp', -1).limit(100)
-
-    messages_text = '\n'.join([msg.get('text', '') for msg in messages])
-
-    if not messages_text.strip():
-        await update.message.reply_text("The user not found.")
-        return
-
-    try:
-        prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text}"
-        response = openai.chat.completions.create(
-            model='gpt-4o-mini',
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=150,
-            temperature=0.7,
-        )
-        summary = response.choices[0].message.content.strip()
-        await update.message.reply_text(summary)
-    except openai.OpenAIError as e:
-        logger.error(f"OpenAI API error: {e}")
-        await update.message.reply_text("I'm sorry, but I'm currently unable to process that request.")
-
-
-# Function for /stats command
 async def statistics_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Retrieve and display chat statistics.
+    """
     chat_id = update.effective_chat.id
-    total_messages = messages_collection.count_documents({'chat_id': chat_id})
-    user_messages = messages_collection.aggregate([
-        {'$match': {'chat_id': chat_id}},
-        {'$group': {
-            '_id': '$user_id',
-            'count': {'$sum': 1},
-            'username': {'$first': '$username'},
-            'full_name': {'$first': '$full_name'}
-        }},
-        {'$sort': {'count': -1}}
-    ])
-    
-    stats_text = f"📊 *Chat Statistics:*\n\nTotal messages: {total_messages}\n\n*User Activity:*\n"
-    for user in user_messages:
-        username = user.get('username')
-        full_name = user.get('full_name', 'Unknown')
-        count = user['count']
-        if username:
-            user_display = f"@{username}"
-        else:
-            user_display = full_name
-        stats_text += f"{user_display}: {count} messages\n"
-
+    stats_text = get_statistics_text(chat_id)
     await update.message.reply_text(stats_text, parse_mode='Markdown')
 
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Respond to unknown commands.
+    """
+    await update.message.reply_text("Unknown command. ¯\\_(ツ)_/¯")
 
-# Function for /daily_summary command
-async def daily_summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    # Europe timezone (UTC+1)
-    now = datetime.now(timezone.utc) + timedelta(hours=1)
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle inline button callbacks.
+    """
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text("Text to @ogabeeek to know how this bot works!")
 
-    today_start = datetime(now.year, now.month, now.day)
-    today_end = today_start + timedelta(days=1)
+async def chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle bot status updates (e.g., when the bot is added to a group).
+    """
+    from utils import extract_status_change  # Ensure extract_status_change is defined in utils.py
 
-    messages = messages_collection.find({
-        'chat_id': chat_id,
-        'timestamp': {'$gte': today_start, '$lt': today_end}
-    }).sort('timestamp', -1).limit(100)
-
-    messages_text = '\n'.join([msg.get('text', '') for msg in messages])
-
-    if not messages_text:
-        await update.message.reply_text("I don't have enough info yet.")
+    result = extract_status_change(update.my_chat_member)
+    if result is None:
         return
 
-    try:
-        prompt = f"Provide a bullet point summary of the following messages from today:\n\n{messages_text}"
-        response = openai.chat.completions.create(
-            model='gpt-4o-mini',
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=200,
-            temperature=0.7,
+    was_member, is_member = result
+    if not was_member and is_member:
+        chat_id = update.effective_chat.id
+        now = datetime.utcnow()
+        chat_info_collection.update_one(
+            {"chat_id": chat_id},
+            {"$set": {"added_on": now}},
+            upsert=True
         )
-        summary = response.choices[0].message.content.strip()
-        await update.message.reply_text(summary)
-    except openai.OpenAIError as e:
-        logger.error(f"OpenAI API error: {e}")
-        await update.message.reply_text("I'm sorry, but I'm currently unable to process that request.")
+        job_queue = context.job_queue
+        job_queue.run_once(send_week_message, when=timedelta(days=7), chat_id=chat_id)
+        job_queue.run_once(send_month_message, when=timedelta(days=30), chat_id=chat_id)
 
+async def send_week_message(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Send a reminder message after one week.
+    """
+    chat_id = context.job.chat_id
+    text = (
+        "Thank you for using this bot, it's totally free for you, but it consumes resources. "
+        "If you want to support it, please visit this link: [https://t.ly/m4-av]"
+    )
+    await context.bot.send_message(chat_id=chat_id, text=text)
 
-# Function for /remember command
-async def remember_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    memory_text = ' '.join(context.args)
-    if not memory_text:
-        await update.message.reply_text("Please provide text to remember. Usage: /remember Your text here.")
-        return
-    chat_id = update.effective_chat.id
-    update_memory(chat_id, memory_text)
-    await update.message.reply_text("📝 Noted. I've added that to my memory.")
-
-
-# Function for /ask command
-async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_prompt = ' '.join(context.args)
-    if not user_prompt:
-        await update.message.reply_text("Please provide a prompt after the command.")
-        return
-
-    chat_id = update.effective_chat.id
-    memory = get_memory(chat_id)
-    prompt = f"Memory: {memory}\n\nQuestion: {user_prompt}"
-
-    try:
-        response = openai.chat.completions.create(
-            model='gpt-4o-mini',
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-            max_tokens=150,
-            temperature=0.7,
-        )
-        answer = response.choices[0].message.content.strip()
-        await update.message.reply_text(answer)
-    except openai.OpenAIError as e:
-        logger.error(f"OpenAI API error: {e}")
-        await update.message.reply_text("I'm sorry, but I'm currently unable to process that request.")
-
-
-# Command handler for /topic
-async def topic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Fetch recent messages
-    chat_id = update.effective_chat.id
-    recent_msgs_cursor = messages_collection.find({'chat_id': chat_id}).sort('timestamp', -1).limit(100)
-    messages = [msg.get('text', '') for msg in reversed(list(recent_msgs_cursor)) if msg.get('text')]
-    context_text = '\n'.join(messages)
-
-    if not context_text:
-        await update.message.reply_text("I don't have enough info yet.")
-        return
-    
-    # Generate topics using AI
-    prompt = "Identify the main topics discussed in the following conversation."
-    topics = ai_functions_lib.generate_response(prompt, context_text)
-
-    await update.message.reply_text(f"Main topics:\n{topics}")
+async def send_month_message(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Send a reminder message after one month.
+    """
+    chat_id = context.job.chat_id
+    text = (
+        "It's been a month! Thank you for using this bot. "
+        "If you'd like to support its development, please visit this link: [https://t.ly/m4-av]"
+    )
+    await context.bot.send_message(chat_id=chat_id, text=text)
 
