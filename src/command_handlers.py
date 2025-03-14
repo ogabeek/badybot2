@@ -2,8 +2,8 @@ import os
 import random
 import io
 from datetime import datetime, timedelta, timezone
-from db_functions import logger
-
+# from db_functions import logger
+import logging
 import pandas as pd
 import matplotlib.pyplot as plt
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatMemberUpdated
@@ -20,8 +20,10 @@ from db_functions import (
     chat_info_collection,
     get_statistics_text,
     insert_message,
-    logger
 )
+# Set up and export the logger.
+logger = logging.getLogger(__name__)
+
 
 from ai_functions_lib import generate_response
 
@@ -127,7 +129,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.getLogger(__name__).error(f"Error inserting message: {e}")
     
     # Occasionally send a random AI comment (1 in 8 chance).
-    if random.randint(1, 4) == 1:
+    if random.randint(1, 8) == 1:
         try:
             prompt = f"Write a humorous short comment about the following message:\n\n{message.text}, feel free to add emojies or be informal and funny. Don't add additional confirmation and quotation marks on this message becouse you are telegram bot"
             ai_comment = generate_response(prompt, "")
@@ -145,7 +147,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #     memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
 
     # Every N messages, send a random GIF or sticker.
-    if random.randint(1, 4) == 1:
+    if random.randint(1, 2) == 1:
         # await send_random_gif_or_sticker(chat.id, context)
         await send_random_sticker(chat.id, context)
         
@@ -167,23 +169,47 @@ async def send_random_gif(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
 
 async def send_random_sticker(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
     """
-    Send a random sticker from a predefined list of sticker packs.
+    Send a random sticker from a predefined list of sticker pack names.
+    If a pack cannot be retrieved, try the next one. If none are available,
+    send a fallback text message.
     """
+    logger = logging.getLogger(__name__)
+    # List of candidate sticker pack names.
+    # Replace these with actual public sticker pack names or IDs known to work.
     sticker_packs = [
-        "Pepe the Frog",
-        "SpongeBob",
-        "Caturday",
-        "BTS Stickers",
-        "Ghibli Stickers",
-        "Reaction Stickers",
-        "Anime Stickers",
-        "Meme Stickers"
+        "Caturday",              # Typically contains cat stickers.
+        "simpson",          # For fans of the group BTS.
+        # "Doc",
+        # "Funny Cats",
+        # "Doggos United",
+        # "Cartoon Heroes",
+        # "Vintage Memes",
+        # "Modern Emoticons",
+        # "Abstract Stickers",
+        # "Funny Faces",
+    
     ]
-    sticker_pack_name = random.choice(sticker_packs)
-    stickers = await context.bot.get_sticker_set(sticker_pack_name)
-    if stickers and stickers.stickers:
-        sticker_id = random.choice(stickers.stickers).file_id
-        await context.bot.send_sticker(chat_id, sticker_id)
+    
+    # Copy list so we can remove invalid packs without modifying the original.
+    available_packs = sticker_packs.copy()
+    
+    while available_packs:
+        sticker_pack_name = random.choice(available_packs)
+        try:
+            sticker_set = await context.bot.get_sticker_set(sticker_pack_name)
+            if sticker_set and sticker_set.stickers:
+                sticker_id = random.choice(sticker_set.stickers).file_id
+                await context.bot.send_sticker(chat_id, sticker_id)
+                return
+            else:
+                logger.warning(f"Sticker set {sticker_pack_name} is empty.")
+        except Exception as e:
+            logger.error(f"Error fetching sticker pack '{sticker_pack_name}': {e}")
+        # Remove the problematic pack and try another.
+        available_packs.remove(sticker_pack_name)
+    
+    # If no sticker pack worked, send a fallback message.
+    await context.bot.send_message(chat_id, "Sorry, no stickers available right now.")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """

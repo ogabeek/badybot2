@@ -78,7 +78,7 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from db_functions import get_memory
     chat_id = update.effective_chat.id
     memory = get_memory(chat_id)
-    full_prompt = f"Memory: {memory}\n\nQuestion: {user_prompt}"
+    full_prompt = f"Memory: {memory}\n\nQuestion: {user_prompt} strickly only answer, use telegram's formating"
     
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
@@ -140,7 +140,7 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("User not found.")
         return
 
-    prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text} Try to keep it structured and you can add some better formatting. You can quote the messages if you think it's possible."
+    prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text} Try to keep it structured and you can add some better formatting. You can quote the messages if you think it's possible. less than 150 words"
     messages_list = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt}
