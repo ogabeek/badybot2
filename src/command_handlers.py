@@ -19,8 +19,11 @@ from db_functions import (
     memory_collection,
     chat_info_collection,
     get_statistics_text,
+    insert_message,
     logger
 )
+
+from ai_functions_lib import generate_response
 
 # Number of messages before triggering a random GIF/sticker response.
 N = 5
@@ -98,19 +101,15 @@ def update_memory(chat_id: int, new_text: str) -> None:
     )
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Store incoming messages and update a simple message counter.
-    Every N messages, trigger sending a random GIF or sticker.
-    """
     message = update.message
-    if not message:
+    if not message or not message.text:
         return
 
     user = message.from_user
     chat = message.chat
 
-    # Store the message in the database.
-    messages_collection.insert_one({
+    # Create a document with the message data.
+    doc = {
         'message_id': message.message_id,
         'chat_id': chat.id,
         'user_id': user.id,
@@ -118,21 +117,38 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'full_name': user.full_name,
         'text': message.text,
         'timestamp': message.date
-    })
+    }
 
-    # Update a simple message counter in the memory collection.
-    counter = memory_collection.find_one({"chat_id": chat.id})
-    if counter and "count" in counter:
-        new_count = counter["count"] + 1
-        memory_collection.update_one({"chat_id": chat.id}, {"$set": {"count": new_count}})
-    else:
-        new_count = 1
-        memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
+    try:
+        insert_message(doc)
+    except Exception as e:
+        # Log the error to help diagnose issues.
+        import logging
+        logging.getLogger(__name__).error(f"Error inserting message: {e}")
+    
+    # Occasionally send a random AI comment (1 in 8 chance).
+    if random.randint(1, 5) == 1:
+        try:
+            prompt = f"Write a humorous short comment about the following message:\n\n{message.text}, feel free to add emojies or be informal and funny. Don't add additional confirmation and quotation marks on this message becouse you are bot"
+            ai_comment = generate_response(prompt, "")
+            await message.reply_text(ai_comment)
+        except Exception as e:
+            logger.error(f"Error generating AI comment: {e}")
 
-    # If count is a multiple of N, send a random GIF or sticker.
-    if new_count % N == 0:
-        await send_random_gif_or_sticker(chat.id, context)
+    # # Update a message counter stored in memory_collection.
+    # counter_doc = memory_collection.find_one({"chat_id": chat.id})
+    # if counter_doc and "count" in counter_doc:
+    #     new_count = counter_doc["count"] + 1
+    #     memory_collection.update_one({"chat_id": chat.id}, {"$set": {"count": new_count}})
+    # else:
+    #     new_count = 1
+    #     memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
 
+    # Every N messages, send a random GIF or sticker.
+    if random.randint(1, 3) == 1:
+        # await send_random_gif_or_sticker(chat.id, context)
+        await send_random_sticker(chat.id, context)
+        
 async def send_random_gif_or_sticker(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
     """
     Randomly choose to send either a GIF or a sticker.
@@ -209,7 +225,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Text to @ogabeeek to know how this bot works!")
+    await query.edit_message_text("You are beautidul ✨ !")
 
 async def chat_member_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """

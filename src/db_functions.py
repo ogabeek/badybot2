@@ -155,7 +155,7 @@ def update_user_profile(chat_id: int, user_id: int, data: Dict[str, Any]) -> Non
         chat_id (int): The chat identifier.
         user_id (int): The user identifier.
         data (Dict[str, Any]): A dictionary of fields to update (e.g., username, full_name,
-                               profile_summary, etc.).
+                            profile_summary, etc.).
     """
     user_profiles_collection.update_one(
         {"chat_id": chat_id, "user_id": user_id},

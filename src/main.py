@@ -10,7 +10,7 @@ from telegram.ext import (
     ChatMemberHandler
 )
 
-## Import AI-specific handlers.
+# Import AI-specific handlers.
 from ai_functions_lib import (
     ask_command,
     remember_command,
