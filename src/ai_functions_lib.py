@@ -140,7 +140,7 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("User not found.")
         return
 
-    prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text}"
+    prompt = f"Based on the following messages, summarize who {display_name} is and what is known about them:\n\n{messages_text} Try to keep it structured and you can add some better formatting. You can quote the messages if you think it's possible."
     messages_list = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt}
@@ -161,7 +161,7 @@ async def topic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("I don't have enough info yet.")
         return
 
-    prompt = "Identify the main topics discussed in the following conversation."
+    prompt = "Identify the main topics discussed in the following conversation.You can add some extra formatting suitable for telegram messages if that's helpfull try to keep it less than 50 characters "
     messages_list = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": f"Context:\n{messages_text}\n\nQuestion:\n{prompt}"}
@@ -171,7 +171,7 @@ async def topic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def daily_summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    /daily_summary command: Provides a bullet-point summary of today's messages.
+    /daily_summary command: Provides a bullet-point summary of today's messages. 
     """
     chat_id = update.effective_chat.id
     from db_functions import messages_collection
@@ -189,7 +189,7 @@ async def daily_summary_command(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("I don't have enough info yet.")
         return
 
-    prompt = f"Provide a bullet point summary of the following messages from today:\n\n{messages_text}"
+    prompt = f"Provide a bullet point summary of the following messages from today:\n\n{messages_text} keep it short and structured. You can add some extra formatting suitable for telegram messages if that's helpfull try to keep it less than 150 characters "
     messages_list = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": prompt}

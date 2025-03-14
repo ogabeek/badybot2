@@ -127,9 +127,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.getLogger(__name__).error(f"Error inserting message: {e}")
     
     # Occasionally send a random AI comment (1 in 8 chance).
-    if random.randint(1, 5) == 1:
+    if random.randint(1, 4) == 1:
         try:
-            prompt = f"Write a humorous short comment about the following message:\n\n{message.text}, feel free to add emojies or be informal and funny. Don't add additional confirmation and quotation marks on this message becouse you are bot"
+            prompt = f"Write a humorous short comment about the following message:\n\n{message.text}, feel free to add emojies or be informal and funny. Don't add additional confirmation and quotation marks on this message becouse you are telegram bot"
             ai_comment = generate_response(prompt, "")
             await message.reply_text(ai_comment)
         except Exception as e:
@@ -145,7 +145,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #     memory_collection.insert_one({"chat_id": chat.id, "count": new_count})
 
     # Every N messages, send a random GIF or sticker.
-    if random.randint(1, 3) == 1:
+    if random.randint(1, 4) == 1:
         # await send_random_gif_or_sticker(chat.id, context)
         await send_random_sticker(chat.id, context)
         
